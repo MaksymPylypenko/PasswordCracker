@@ -1,3 +1,0 @@
-﻿  INC.cpp
-E:\GitHub\ThreadPool\ThreadPool\ThreadPool\INC.cpp(14,12): warning C4018: '>=': signed/unsigned mismatch
-  ThreadPool.vcxproj -> E:\GitHub\ThreadPool\ThreadPool\Debug\ThreadPool.exe
