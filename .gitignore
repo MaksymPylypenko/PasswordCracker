@@ -1,0 +1,6 @@
+# Ignore these
+.vs
+.vs/*
+x64/*
+ThreadPool/x64/*
+Unit-tests/x64/*
