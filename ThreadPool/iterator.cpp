@@ -19,43 +19,64 @@ std::string charsetOf(char type) {
 }
 
 
-Iterator::Iterator(std::string mask) {
+Iterator::Iterator(std::string mask, std::vector<int> offset) {
 	this->mask = mask;
-	combinations = std::vector<int>(mask.size(),0);
+	this->offset = offset;
+	
+	currDigits = 1;
+	slowestRotor = 0; // or currDigits - 1
+	combinations = std::vector<int>(currDigits, 1);
+	maxDigits = mask.size();
 }
 
 
-void Iterator::init(std::vector<int> offset) {
+void Iterator::resetRotors() {
 
 	std::string charset;
 	start = mask;
-	int n = mask.size();
-
+		
 	// The total number of combinations is simply:
 	// comb at pos 1 * comb at pos 2 * comb at pos 3 ...
 
-	for (int i = 0; i < n; i++) {
+	combinations = std::vector<int>(currDigits, 1);
+	for (int i = 0; i < currDigits; i++) {
 		charset = charsetOf(mask[i]);
 		start.at(i) = charset.at(offset[i]);
-
+			
 		// Since the initial position of some rotors is not at the start, we have less combinations
+				
 		combinations[i] = charset.size() - offset[i];
-
-		for (int j = 0; j < i; j++) {
-			combinations[i] *= combinations[j];
+		for (int j = 0; j < i; j++) {	
+			// Full rounds
+			charset = charsetOf(mask[j]);
+			combinations[i] *= charset.size();			
 		}		
+
+		int rest = 0;		
+		for (int j = 0; j < i; j++) {
+			// Short round
+			rest += offset[i];			
+		}
+		combinations[i] -= rest;
+	    
+		//printf("current combinations = %d\n", combinations[i]);
 	}
+
+	word = start.substr(0, currDigits);
+	slowestRotor = currDigits - 1;
 }
 
-
-void Iterator::setLen(int digits) {
-	word = start.substr(0, digits);
-	id = digits-1; // -1, since I am using it as an index for [capacities]
-}
 
 
 bool Iterator::next(int rotor) {
-	if (combinations[id] <=1) {
+	//printf("wordsLeft = %d\n", combinations[slowestRotor]);
+
+	if (combinations[slowestRotor] <=1) {
+		return false;
+	}
+
+	if (rotor >= word.size()) {
+		printf("Failed to estimate combinations!\n");
 		return false;
 	}
 
@@ -72,7 +93,19 @@ bool Iterator::next(int rotor) {
 		word.at(rotor) = charset.at(first);
 		return next(rotor+1);
 	}
-	combinations[id]--;
+	combinations[slowestRotor]--;	
 	word.at(rotor)++;
+	return true;
+}
+
+
+bool Iterator::guessWord() {
+	if (!next()) {		
+		currDigits++;
+		if(currDigits > maxDigits) {
+			return false;
+		}
+		resetRotors();
+	}
 	return true;
 }
