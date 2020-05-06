@@ -2,46 +2,47 @@
 #include <thread> 
 #include "utility.h"
 
-bool cracker() {
+void cracker(int id) {
 
-	int comparisons = 0;
 
-	std::string mask = "llll";
-	std::string plain = init(mask);
-	std::string word;
+	std::string mask = "ll";
+	std::vector<int> offset{ 0,0 };
 
-	for (int end = 1; end <= mask.size(); end++) {
-		word = plain.substr(0, end);
+	Iterator iterator = Iterator(mask);
+	iterator.init(offset);
+
+
+	for (int digits = 1; digits <= mask.size(); digits++) {
+		iterator.setLen(digits);
+
+		printf("\nInitial word = %s \n", iterator.word.c_str()); 
+		printf("Expected combinations %d\n\n", iterator.combinations[iterator.id]);
 
 		bool wordsLeft = true;
 		while (wordsLeft) {
 
-			if (word == "gggg") { // @TODO, add a hash function here...
-				std::cout << "Found\n";
-				return true;
+			if (iterator.word == "gg") { // @TODO, compute hash and compare to plain-text
+				std::cout << id << " found\n";
+				return;
 			}
 
-			std::cout << word << "\n";
+			printf("current word = %s \n", iterator.word.c_str());
 
-			if (!inc(word, mask)) {
+			if (!iterator.next()) {
 				wordsLeft = false;
 			}
 		}			
 		
 	}	
-	return false;
 }
 
 
 int main() {
 
-	std::string mask = "lu";
-	std::string word = init(mask);
+	std::cout << "Program started\n";
 
-	std::cout << "Start\n";
-
-	cracker();
-	
+	std::thread th1(cracker, 1);	
+	th1.join();
     
     return 0;
 }
