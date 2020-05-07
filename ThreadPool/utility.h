@@ -3,16 +3,18 @@
 
 #include <string>
 #include <vector>
+#include <optional>
+#include <assert.h> 
 
 
 class Iterator {
 public:
-	Iterator(std::string mask, std::vector<int> offset);
+	Iterator(std::string mask);
 
-	/// Allows to generate all possible combinations of a word with a fixed size.
+	/// Allows to generate all possible rotationsLeft of a word with a fixed size.
 	bool next(int rotor = 0);
 
-	// Allows to generate all possible combinations of words with any size.
+	// Allows to generate all possible rotationsLeft of words with any size.
 	bool guessWord();
 
 	/// Holds a recently guessed word. 
@@ -21,13 +23,13 @@ public:
 	/// Examples of custom words: "0", "0aA", "4faasdXMMA" ...
 	std::string word;
 
-	/// Sets rotors depending on the number of [currDigits].
+	/// Increases the length of a word.
 	///
 	/// Rotors act like a set of clocks. When the 1st makes a full circle, it rotates the next one.
 	/// For example, we start from single digit words [a], [b], [c] ... 
 	/// When the last digit is reached e.g [z], rotors are reset to allow longer words: [a][a], [b][a] ... 
 	/// Resets happen at [z][z], [z][z][z] etc.
-	void resetRotors(); 
+	bool resetRotors();
 
 	/// Indicates the edge rotor. 
 	///
@@ -42,14 +44,19 @@ public:
 	/// Describes possible values that a digit at a certain rotor can have.
 	std::string mask;  
 
-	/// Defines initial positions of the rotors.
-	std::string start;
 
-	/// Allows to bypass combinations that we don't need.
-	std::vector<int> offset;
+	/// Allows to bypass rotationsLeft that we don't need.
+	std::vector<int> offsetStart;
+	std::vector<int> offsetBreak;
+
+	/// Holds a string position generated from [offsetStart].
+	std::string initWord;
 	
 	/// Allows to limit rotations of rotors.
-	std::vector<int> combinations; 			
+	std::vector<int> rotationsLeft; 			
+
+	// Allows to assign multiple threads [N] to iterate portions of the plain-text space  
+	std::vector<Iterator> divideWork(int N);
 };
 
 #endif util_h

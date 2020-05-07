@@ -15,73 +15,76 @@ std::string charsetOf(char type) {
 	case 'l':
 		return lowerCase;
 		break;	
+	case 'd':
+		return numbers;
+		break;
 	}
 }
 
 
-Iterator::Iterator(std::string mask, std::vector<int> offset) {
+Iterator::Iterator(std::string mask) {
 	this->mask = mask;
-	this->offset = offset;
-	
+	offsetStart = std::vector<int>(mask.size(), 0);	
+
+	for (char& c : mask) {
+		std::string charset = charsetOf(c);
+		offsetBreak.push_back(charset.size());
+	}
+
 	currDigits = 1;
 	slowestRotor = 0; // or currDigits - 1
-	combinations = std::vector<int>(currDigits, 1);
+	rotationsLeft = std::vector<int>(currDigits, 1);
 	maxDigits = mask.size();
 }
 
 
-void Iterator::resetRotors() {
-
-	std::string charset;
-	start = mask;
-		
-	// The total number of combinations is simply:
-	// comb at pos 1 * comb at pos 2 * comb at pos 3 ...
-
-	combinations = std::vector<int>(currDigits, 1);
-	for (int i = 0; i < currDigits; i++) {
-		charset = charsetOf(mask[i]);
-		start.at(i) = charset.at(offset[i]);
-			
-		// Since the initial position of some rotors is not at the start, we have less combinations
-				
-		combinations[i] = charset.size() - offset[i];
-		for (int j = 0; j < i; j++) {	
-			// Full rounds
-			charset = charsetOf(mask[j]);
-			combinations[i] *= charset.size();			
-		}		
-
-		int rest = 0;		
-		for (int j = 0; j < i; j++) {
-			// Short round
-			rest += offset[i];			
-		}
-		combinations[i] -= rest;
-	    
-		//printf("current combinations = %d\n", combinations[i]);
+bool Iterator::resetRotors() {
+	if (currDigits > maxDigits) {
+		return false;
 	}
 
-	word = start.substr(0, currDigits);
+	std::string charset;
+	initWord = std::string(mask.size(),' ');
+
+	rotationsLeft = std::vector<int>(currDigits);
+	for (int i = 0; i < currDigits; i++) {
+		charset = charsetOf(mask[i]);
+		initWord.at(i) = charset.at(offsetStart[i]);
+			
+		// Limit the number of rotations				
+		rotationsLeft[i] = offsetBreak[i]; // -offsetStart[i];
+	}
+
+	word = initWord.substr(0, currDigits);
 	slowestRotor = currDigits - 1;
+
+	return true;
 }
 
 
 
 bool Iterator::next(int rotor) {
-	//printf("wordsLeft = %d\n", combinations[slowestRotor]);
+	//printf("wordsLeft = %d\n", rotationsLeft[slowestRotor]);
 
-	if (combinations[slowestRotor] <=1) {
-		return false;
+	//printf("Rotations at %d = %d\n", rotor, rotationsLeft[rotor]);
+
+	if (rotationsLeft[slowestRotor] <= 1) {
+		//printf("Rotor [%d] has reached its final position [%c]\n", slowestRotor, word[slowestRotor]);
+		slowestRotor--; 
+		if (slowestRotor == -1) {
+			//printf(" All rotors have reached their final positions!\n");
+			return false;
+		}
 	}
-
+	
 	if (rotor >= word.size()) {
-		printf("Failed to estimate combinations!\n");
+		// This happens when a custom [offsetStart] is used. 
+		//printf("Attempted to rotate a rotor that is outside boundaries!\n");
 		return false;
 	}
 
-	// Move to the next [rotor] when the round is finished 
-	// Example:
+	// Move to the slower [rotor] when the round is finished.
+	// For example:
 	// [a][a] --> [b][a] --> ... --> [z][a] 
 	// [a][b] --> [b][b] --> ... --> [z][b]
 	// [a][c] --> [b][c] --> ... --> [z][c]
@@ -93,19 +96,34 @@ bool Iterator::next(int rotor) {
 		word.at(rotor) = charset.at(first);
 		return next(rotor+1);
 	}
-	combinations[slowestRotor]--;	
+
+	if (rotor == slowestRotor) {
+		rotationsLeft[rotor]--;
+	}
+	
 	word.at(rotor)++;
 	return true;
 }
 
 
 bool Iterator::guessWord() {
-	if (!next()) {		
+	if (!next()) {	
 		currDigits++;
-		if(currDigits > maxDigits) {
-			return false;
-		}
-		resetRotors();
+		return resetRotors();
 	}
 	return true;
+}
+
+std::vector<Iterator> divideWork(int N) {
+
+	std::vector<Iterator> jobs;
+
+	// 1. Find total work
+	// 2. Find offsets
+	// 3. Create N iterators
+
+	for (int i = 0; i < N; i++) {
+		//TODO
+	}
+	return jobs;
 }
