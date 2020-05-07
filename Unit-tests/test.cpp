@@ -3,168 +3,237 @@
 #include "../ThreadPool/iterator.cpp"
 
 
-TEST(Charset, numbers) {
-	std::string mask = "dd";
-	Iterator iterator = Iterator(mask);
-	iterator.currDigits = 2;
-	iterator.resetRotors();
+/// Test routines
 
-	bool wordsLeft = true;
-	int count = 0;
-	while (wordsLeft) {
-		count++;
-		if (!iterator.next()) {
-			wordsLeft = false;
-		}
+int countWords(Iterator &iterator) {
+	int count = 1;
+	while (iterator.next()) {
+		count++;		
 	}
-	EXPECT_EQ(count, 10 * 10);
+	return count;
+}
 
-	int zero = iterator.word.compare(std::string(2, '9'));
-	EXPECT_EQ(zero, 0);
+Iterator quickSetup(char * mask) {
+	std::string s(mask);
+	Iterator iterator = Iterator(s);
+	iterator.setWordLen(s.size());
+	iterator.resetRotors();
+	return iterator;
 }
 
 
-TEST(Charset, numbers_and_letters) {
-	std::string mask = "dl";
-	Iterator iterator = Iterator(mask);
-	iterator.currDigits = 2;
-	iterator.resetRotors();
+/// Tests
+TEST(Charset, numbers) {
+	Iterator iterator = quickSetup("dd");
 
-	bool wordsLeft = true;
-	int count = 0;
-	while (wordsLeft) {
-		count++;
-		if (!iterator.next()) {
-			wordsLeft = false;
-		}
-	}
+	char first_c1 = iterator.word[0];
+	char first_c2 = iterator.word[1];
+	EXPECT_EQ(first_c1, '0');
+	EXPECT_EQ(first_c2, '0');
+
+	int count = countWords(iterator);
+	EXPECT_EQ(count, 10 * 10);
+
+	char last_c1 = iterator.word[0];
+	char last_c2 = iterator.word[1];
+	EXPECT_EQ(last_c1, '9');
+	EXPECT_EQ(last_c2, '9');
+}
+
+TEST(Charset, numbers_and_letters) {
+	Iterator iterator = quickSetup("dl");
+
+	char first_c1 = iterator.word[0];
+	char first_c2 = iterator.word[1];
+	EXPECT_EQ(first_c1, '0');
+	EXPECT_EQ(first_c2, 'a');
+
+	int count = countWords(iterator);
 	EXPECT_EQ(count, 10 * 26);
 
-	int zero = iterator.word.compare(std::string{ "9z" });
-	EXPECT_EQ(zero, 0);
+	char last_c1 = iterator.word[0];
+	char last_c2 = iterator.word[1];
+	EXPECT_EQ(last_c1, '9');
+	EXPECT_EQ(last_c2, 'z');
 }
 
 TEST(Rotors, one) {
-	std::string mask = "l";
-	Iterator iterator = Iterator(mask);
-	iterator.resetRotors();
+	Iterator iterator = quickSetup("l");
 
-	bool wordsLeft = true;
-	int count = 0;
-	while (wordsLeft) {
-		count++;
-		if (!iterator.next()) {
-			wordsLeft = false;
-		}
-	}
-	
+	char first_c1 = iterator.word[0];
+	EXPECT_EQ(first_c1, 'a');
+
+	int count = countWords(iterator);	
 	EXPECT_EQ(count, 26);
 
-	int zero = iterator.word.compare(std::string(1, 'z'));
-	EXPECT_EQ(zero, 0);
+	char last_c1 = iterator.word[0];
+	EXPECT_EQ(last_c1, 'z');
 }
 
-
 TEST(Rotors, two) {
-	std::string mask = "ll";
-	Iterator iterator = Iterator(mask);
-	iterator.currDigits = 2;
-	iterator.resetRotors();
+	Iterator iterator = quickSetup("ll");
 
-	bool wordsLeft = true;
-	int count = 0;
-	while (wordsLeft) {
-		count++;
-		if (!iterator.next()) {
-			wordsLeft = false;
-		}
-	}
+	char first_c1 = iterator.word[0];
+	char first_c2 = iterator.word[1];
+
+	EXPECT_EQ(first_c1, 'a');
+	EXPECT_EQ(first_c2, 'a');
+
+	int count = countWords(iterator);
 	EXPECT_EQ(count, 26 * 26);
 
-	int zero = iterator.word.compare(std::string(2, 'z'));
-	EXPECT_EQ(zero, 0);
+	char last_c1 = iterator.word[0];
+	char last_c2 = iterator.word[1];
+	EXPECT_EQ(last_c1, 'z');
+	EXPECT_EQ(last_c2, 'z');
 }
 
 
 TEST(Rotors, three) {
-	std::string mask = "lll";
-	Iterator iterator = Iterator(mask);
-	iterator.currDigits = 3;
-	iterator.resetRotors();
+	Iterator iterator = quickSetup("lll");
 
-	bool wordsLeft = true;
-	int count = 0;
-	while (wordsLeft) {
-		count++;
-		if (!iterator.next()) {
-			wordsLeft = false;
-		}
-	}
+	char first_c1 = iterator.word[0];
+	char first_c2 = iterator.word[1];
+	char first_c3 = iterator.word[2];
+
+	EXPECT_EQ(first_c1, 'a');
+	EXPECT_EQ(first_c2, 'a');
+	EXPECT_EQ(first_c3, 'a');
+
+	int count = countWords(iterator);
 	EXPECT_EQ(count, 26 * 26 * 26);
 
-	int zero = iterator.word.compare(std::string(3, 'z'));
-	EXPECT_EQ(zero, 0);
+	char last_c1 = iterator.word[0];
+	char last_c2 = iterator.word[1];
+	char last_c3 = iterator.word[2];
+	EXPECT_EQ(last_c1, 'z');
+	EXPECT_EQ(last_c2, 'z');
+	EXPECT_EQ(last_c3, 'z');
 }
 
+/// Offsets
+/// ----------------------------------------------------------------
 
 TEST(Offset, start) {
-
-	std::string mask = "ll";
+	std::string mask = "dd";
 	Iterator iterator = Iterator(mask);
-	iterator.offsetStart = std::vector<int>(2, 13);
-	iterator.currDigits = 2;
+	iterator.setStart(std::vector<int>(mask.size(), 5)); 
+	iterator.setWordLen(2);
 	iterator.resetRotors();
 
-	bool wordsLeft = true;
-	int count = 0;
-	while (wordsLeft) {
-		count++;
-		if (!iterator.next()) {
-			wordsLeft = false;
-		}
-	}
+	char first_c1 = iterator.word[0];
+	char first_c2 = iterator.word[1];
+	EXPECT_EQ(first_c1, '5');
+	EXPECT_EQ(first_c2, '5');
 
-	EXPECT_EQ(count, 26* (26 - 13) - 13);
+	int count = countWords(iterator);
+	EXPECT_EQ(count, 5*10 - 5);
+	
+	char last_c1 = iterator.word[0];
+	char last_c2 = iterator.word[1];
+	EXPECT_EQ(last_c1, '9');
+	EXPECT_EQ(last_c2, '9');
 }
-
 
 TEST(Offset, end) {
 
 	std::string mask = "ll";
 	Iterator iterator = Iterator(mask);
-	iterator.offsetBreak = std::vector<int>(2, 13);
-	iterator.currDigits = 2;
+	iterator.setFinish(std::vector<int>(2, 13));
+	iterator.setWordLen(2);
 	iterator.resetRotors();
 
-	bool wordsLeft = true;
-	int count = 0;
-	while (wordsLeft) {
-		count++;
-		if (!iterator.next()) {
-			wordsLeft = false;
-		}
-	}
+	char first_c1 = iterator.word[0];
+	char first_c2 = iterator.word[1];
+	EXPECT_EQ(first_c1, 'a');
+	EXPECT_EQ(first_c2, 'a');
 
-	EXPECT_EQ(count, 26 * (26 - 13) - 13);
+	int count = countWords(iterator);
+	EXPECT_EQ(count, 13 * (26) + 13 + 1);
+
+	char last_c1 = iterator.word[0];
+	char last_c2 = iterator.word[1];
+	EXPECT_EQ(last_c1, 'n');
+	EXPECT_EQ(last_c2, 'n');
 }
 
+TEST(Offset, end2) {
+
+	std::string mask = "ddd";
+	Iterator iterator = Iterator(mask);
+	iterator.setFinish(std::vector<int>(mask.size(), 3));
+	iterator.setWordLen(3);
+	iterator.resetRotors();
+
+	char first_c1 = iterator.word[0];
+	char first_c2 = iterator.word[1];
+	char first_c3 = iterator.word[2];
+	EXPECT_EQ(first_c1, '0');
+	EXPECT_EQ(first_c2, '0');
+	EXPECT_EQ(first_c3, '0');
+
+	int count = countWords(iterator);
+	EXPECT_EQ(count, 3*(10*10) + 3*(10) + 3 + 1);
+
+	char last_c1 = iterator.word[0];
+	char last_c2 = iterator.word[1];
+	char last_c3 = iterator.word[1];
+	EXPECT_EQ(last_c1, '3');
+	EXPECT_EQ(last_c2, '3');
+	EXPECT_EQ(last_c3, '3');
+}
 
 TEST(Offset, range) {
 	std::string mask = "dd";
 	Iterator iterator = Iterator(mask);
-	iterator.offsetStart = std::vector<int>(mask.size(), 5); 
-	iterator.offsetBreak = std::vector<int>(mask.size(), 7); 
-	iterator.currDigits = 2;
+	iterator.setStart(std::vector<int>(mask.size(), 5)); 
+	iterator.setFinish(std::vector<int>(mask.size(), 7)); 
+	iterator.setWordLen(2);
 	iterator.resetRotors();
 
+	char first_c1 = iterator.word[0];
+	char first_c2 = iterator.word[1];
+	EXPECT_EQ(first_c1, '5');
+	EXPECT_EQ(first_c2, '5');
+
+	int count = countWords(iterator);
+
+	// 55 --> 77 
+	// This is 2 rounds per 10 digits + 2
+	EXPECT_EQ(count, 2*10 + 2 + 1);
+
+	char last_c1 = iterator.word[0];
+	char last_c2 = iterator.word[1];
+	EXPECT_EQ(last_c1, '7');
+	EXPECT_EQ(last_c2, '7');
+}
+
+TEST(Bruteforce, all_combinations) {
+	std::string mask = "dd";
+	Iterator iterator = Iterator(mask);
+	iterator.setStart(std::vector<int>(mask.size(), 5));
+	iterator.setFinish(std::vector<int>(mask.size(), 7));
+	iterator.resetRotors();
+
+
+	char first_c1 = iterator.word[0];
+	EXPECT_EQ(first_c1, '5');
+
 	bool wordsLeft = true;
-	int count = 0;
+	int count = 1;
 	while (wordsLeft) {
 		count++;
-		if (!iterator.next()) {
+		if (!iterator.guessWord()) {
 			wordsLeft = false;
 		}
 	}
 
-	EXPECT_EQ(count, 4*10 + 5);
+	// len 1 = 5 --> 7 = 3
+	// len 2 = 55 --> 77 = 2*10 + 3
+	EXPECT_EQ(count, 2*10 + 3 + 3 + 1);
+
+	char last_c1 = iterator.word[0];
+	char last_c2 = iterator.word[1];
+	EXPECT_EQ(last_c1, '7');
+	EXPECT_EQ(last_c2, '7');
 }

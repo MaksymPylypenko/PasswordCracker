@@ -11,10 +11,10 @@ class Iterator {
 public:
 	Iterator(std::string mask);
 
-	/// Allows to generate all possible rotationsLeft of a word with a fixed size.
+	/// Allows to generate all possible combinations of a word with a fixed size.
 	bool next(int rotor = 0);
 
-	// Allows to generate all possible rotationsLeft of words with any size.
+	// Allows to generate all possible combinations of words with any size.
 	bool guessWord();
 
 	/// Holds a recently guessed word. 
@@ -31,6 +31,18 @@ public:
 	/// Resets happen at [z][z], [z][z][z] etc.
 	bool resetRotors();
 
+	void setWordLen(int n);
+	void setStart(std::vector<int> offset);
+	void setFinish(std::vector<int> offset);
+
+	void debug();
+	int count;
+		
+
+	// Allows to assign multiple threads [N] to iterate portions of the plain-text space  
+	std::vector<Iterator> divideWork(int N);
+
+private:
 	/// Indicates the edge rotor. 
 	///
 	/// From the previous example, when the slowest rotor is [z], the reset will happen.
@@ -40,23 +52,19 @@ public:
 	/// Tells if we can increase the size of a word.
 	int currDigits;
 	int maxDigits;
-		 
-	/// Describes possible values that a digit at a certain rotor can have.
-	std::string mask;  
 
+	/// Holds a string position generated from [offsetStart].
+	std::string initWord;
+
+	/// Describes possible values that a digit at a certain rotor can have.
+	std::string mask;
 
 	/// Allows to bypass rotationsLeft that we don't need.
 	std::vector<int> offsetStart;
 	std::vector<int> offsetBreak;
 
-	/// Holds a string position generated from [offsetStart].
-	std::string initWord;
-	
 	/// Allows to limit rotations of rotors.
-	std::vector<int> rotationsLeft; 			
-
-	// Allows to assign multiple threads [N] to iterate portions of the plain-text space  
-	std::vector<Iterator> divideWork(int N);
+	std::vector<int> rotationsLeft;
 };
 
 #endif util_h

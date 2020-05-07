@@ -25,11 +25,12 @@ std::string charsetOf(char type) {
 Iterator::Iterator(std::string mask) {
 	this->mask = mask;
 	offsetStart = std::vector<int>(mask.size(), 0);	
-
+	offsetBreak.clear();
 	for (char& c : mask) {
 		std::string charset = charsetOf(c);
-		offsetBreak.push_back(charset.size());
+		offsetBreak.push_back(charset.size()-1);
 	}
+
 
 	currDigits = 1;
 	slowestRotor = 0; // or currDigits - 1
@@ -38,7 +39,45 @@ Iterator::Iterator(std::string mask) {
 }
 
 
+void Iterator::setStart(std::vector<int> offset) {
+	offsetStart = offset;
+}
+
+
+void Iterator::setFinish(std::vector<int> offset) {	
+	offsetBreak = offset;
+}
+
+
+void Iterator::setWordLen(int n) {
+	currDigits = n;
+}
+
+
+void Iterator::debug() {
+
+	printf("Word='");
+	int i = 0;
+	for (i = 0; i < word.size(); i++) {
+		if (i == slowestRotor) {
+			printf("[");
+		}
+		printf("%c", word.at(i));
+		if (i == slowestRotor) {
+			printf("]");
+		}
+	}	
+	printf("'\t#%d\tRotors=[", count);
+	for (i = 0; i < rotationsLeft.size()-1; i++) {
+		printf("%d-", rotationsLeft[i]);
+	}
+	printf("%d]", rotationsLeft[i]);
+	printf("\n");
+}
+
 bool Iterator::resetRotors() {
+	count = 1;
+
 	if (currDigits > maxDigits) {
 		return false;
 	}
@@ -47,41 +86,45 @@ bool Iterator::resetRotors() {
 	initWord = std::string(mask.size(),' ');
 
 	rotationsLeft = std::vector<int>(currDigits);
-	for (int i = 0; i < currDigits; i++) {
+	int i=0;
+	for (i = 0; i < currDigits; i++) {
 		charset = charsetOf(mask[i]);
 		initWord.at(i) = charset.at(offsetStart[i]);
 			
 		// Limit the number of rotations				
-		rotationsLeft[i] = offsetBreak[i]; // -offsetStart[i];
+		rotationsLeft[i] = offsetBreak[i];
 	}
+
+	// The right most rotor might not need a full round!
+	int j = i - 1;
+	rotationsLeft[j] = offsetBreak[j] - offsetStart[j];
 
 	word = initWord.substr(0, currDigits);
 	slowestRotor = currDigits - 1;
+	
 
 	return true;
 }
 
 
-
 bool Iterator::next(int rotor) {
 	//printf("wordsLeft = %d\n", rotationsLeft[slowestRotor]);
 
-	//printf("Rotations at %d = %d\n", rotor, rotationsLeft[rotor]);
+	if (rotor >= word.size()) {
+		// This may happen when a custom [offsetStart] is used. 
+		printf("\nAttempted to rotate a rotor that is outside boundaries!\n\n");
+		return false;
+	}
 
-	if (rotationsLeft[slowestRotor] <= 1) {
-		//printf("Rotor [%d] has reached its final position [%c]\n", slowestRotor, word[slowestRotor]);
+	if (rotationsLeft[slowestRotor] <= 0) {
+		printf("\nRotor [%d] has reached its final position [%c]\n\n", slowestRotor, word[slowestRotor]);
 		slowestRotor--; 
 		if (slowestRotor == -1) {
-			//printf(" All rotors have reached their final positions!\n");
 			return false;
 		}
 	}
 	
-	if (rotor >= word.size()) {
-		// This happens when a custom [offsetStart] is used. 
-		//printf("Attempted to rotate a rotor that is outside boundaries!\n");
-		return false;
-	}
+	count++;
 
 	// Move to the slower [rotor] when the round is finished.
 	// For example:
@@ -92,7 +135,8 @@ bool Iterator::next(int rotor) {
 	std::string charset = charsetOf(mask[rotor]);
 	int first = 0;
 	int last = charset.size() - 1;
-	if (word.at(rotor) == charset.at(last)) {
+	if (word.at(rotor) == charset.at(last)) {	
+
 		word.at(rotor) = charset.at(first);
 		return next(rotor+1);
 	}
@@ -113,6 +157,7 @@ bool Iterator::guessWord() {
 	}
 	return true;
 }
+
 
 std::vector<Iterator> divideWork(int N) {
 
