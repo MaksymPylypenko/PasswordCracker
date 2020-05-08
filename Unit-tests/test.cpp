@@ -3,7 +3,7 @@
 #include "../ThreadPool/iterator.cpp"
 
 
-/// Test routines
+/// Utility functions to make tests cleaner
 
 int countWords(Iterator &iterator) {
 	int count = 1;
@@ -111,8 +111,6 @@ TEST(Rotors, three) {
 	EXPECT_EQ(last_c3, 'z');
 }
 
-/// Offsets
-/// ----------------------------------------------------------------
 
 TEST(Offset, start) {
 	std::string mask = "dd";
@@ -139,7 +137,7 @@ TEST(Offset, end) {
 
 	std::string mask = "ll";
 	Iterator iterator = Iterator(mask);
-	iterator.setFinish(std::vector<int>(2, 13));
+	iterator.setBreak(std::vector<int>(2, 13));
 	iterator.setWordLen(2);
 	iterator.resetRotors();
 
@@ -149,6 +147,10 @@ TEST(Offset, end) {
 	EXPECT_EQ(first_c2, 'a');
 
 	int count = countWords(iterator);
+
+	// [aa,al) = 13*26
+	// [al,ll] = 14
+
 	EXPECT_EQ(count, 13 * (26) + 13 + 1);
 
 	char last_c1 = iterator.word[0];
@@ -161,7 +163,7 @@ TEST(Offset, end2) {
 
 	std::string mask = "ddd";
 	Iterator iterator = Iterator(mask);
-	iterator.setFinish(std::vector<int>(mask.size(), 3));
+	iterator.setBreak(std::vector<int>(mask.size(), 3));
 	iterator.setWordLen(3);
 	iterator.resetRotors();
 
@@ -173,7 +175,12 @@ TEST(Offset, end2) {
 	EXPECT_EQ(first_c3, '0');
 
 	int count = countWords(iterator);
-	EXPECT_EQ(count, 3*(10*10) + 3*(10) + 3 + 1);
+
+	// [000,300) = 3*10*10
+	// [300,330) = 3*10
+	// [330,333] = 4
+
+	EXPECT_EQ(count, 3*(10*10) + 3*(10) + 4);
 
 	char last_c1 = iterator.word[0];
 	char last_c2 = iterator.word[1];
@@ -187,7 +194,7 @@ TEST(Offset, range) {
 	std::string mask = "dd";
 	Iterator iterator = Iterator(mask);
 	iterator.setStart(std::vector<int>(mask.size(), 5)); 
-	iterator.setFinish(std::vector<int>(mask.size(), 7)); 
+	iterator.setBreak(std::vector<int>(mask.size(), 7));
 	iterator.setWordLen(2);
 	iterator.resetRotors();
 
@@ -199,8 +206,10 @@ TEST(Offset, range) {
 	int count = countWords(iterator);
 
 	// 55 --> 77 
-	// This is 2 rounds per 10 digits + 2
-	EXPECT_EQ(count, 2*10 + 2 + 1);
+	// [55,75) = 2*10
+	// [75,77] = 3 
+
+	EXPECT_EQ(count, 2*10 + 3);
 
 	char last_c1 = iterator.word[0];
 	char last_c2 = iterator.word[1];
@@ -212,7 +221,7 @@ TEST(Bruteforce, all_combinations) {
 	std::string mask = "dd";
 	Iterator iterator = Iterator(mask);
 	iterator.setStart(std::vector<int>(mask.size(), 5));
-	iterator.setFinish(std::vector<int>(mask.size(), 7));
+	iterator.setBreak(std::vector<int>(mask.size(), 7));
 	iterator.resetRotors();
 
 
@@ -228,8 +237,9 @@ TEST(Bruteforce, all_combinations) {
 		}
 	}
 
-	// len 1 = 5 --> 7 = 3
-	// len 2 = 55 --> 77 = 2*10 + 3
+	// len = 1 --> [5,7] = 3
+	// len = 2 --> [55,77] = 2*10 + 3
+
 	EXPECT_EQ(count, 2*10 + 3 + 3 + 1);
 
 	char last_c1 = iterator.word[0];

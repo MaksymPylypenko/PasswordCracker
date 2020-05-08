@@ -4,17 +4,15 @@
 
 void cracker(int id) {
 
-	std::string mask = "dd";	
+	std::string mask = "ddd";	
 	Iterator iterator = Iterator(mask);
 	iterator.setStart(std::vector<int>(mask.size(), 5)); 
-	iterator.setFinish(std::vector<int>(mask.size(), 7));
+	iterator.setBreak(std::vector<int>(mask.size(), 7));
 	iterator.resetRotors();
 		
 	bool wordsLeft = true;
 	while(wordsLeft) {
 		iterator.debug();
-		//printf("%s\n", iterator.word.c_str());
-
 		//if (iterator.word == "gg") { // @todo, compute hash and compare to plain-text
 		//	std::cout << id << " found\n";
 		//	return;
@@ -22,7 +20,7 @@ void cracker(int id) {
 
 		wordsLeft = iterator.guessWord();		
 	}	
-	//printf("Output = %s\n", iterator.word.c_str());
+	//iterator.divideWork(4);
 }
 
 

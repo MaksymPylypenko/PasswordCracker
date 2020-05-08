@@ -44,7 +44,7 @@ void Iterator::setStart(std::vector<int> offset) {
 }
 
 
-void Iterator::setFinish(std::vector<int> offset) {	
+void Iterator::setBreak(std::vector<int> offset) {	
 	offsetBreak = offset;
 }
 
@@ -74,6 +74,7 @@ void Iterator::debug() {
 	printf("%d]", rotationsLeft[i]);
 	printf("\n");
 }
+
 
 bool Iterator::resetRotors() {
 	count = 1;
@@ -108,12 +109,9 @@ bool Iterator::resetRotors() {
 
 
 bool Iterator::next(int rotor) {
-	//printf("wordsLeft = %d\n", rotationsLeft[slowestRotor]);
 
 	if (rotor >= word.size()) {
-		// This may happen when a custom [offsetStart] is used. 
-		printf("\nAttempted to rotate a rotor that is outside boundaries!\n\n");
-		return false;
+		assert(false && "Rotation outside bounds");
 	}
 
 	if (rotationsLeft[slowestRotor] <= 0) {
@@ -159,16 +157,73 @@ bool Iterator::guessWord() {
 }
 
 
-std::vector<Iterator> divideWork(int N) {
+std::vector<Iterator> Iterator::divideWork(int N) {
 
 	std::vector<Iterator> jobs;
 
 	// 1. Find total work
+
+	std::vector<int> totalWork;
+	std::vector<int> smallWork;
+
+	for (char& c : mask) {
+		std::string charset = charsetOf(c);
+		totalWork.push_back(charset.size());
+	}
+
 	// 2. Find offsets
+
+	smallWork = totalWork;
+
+	for (int& i : smallWork) {
+		i = i / N;
+	}
+	
+	std::vector<int> prev(mask.size(), 0);
+	int range = 0;
+	for (range = 0; range < N-1; range++) {
+		// 0 to work
+		// work to work+work
+		// prev to prev+work
+		std::vector<int> start = prev;
+
+
+
+		std::vector<int> end = start;
+		for (int rotor = 0; rotor < mask.size(); rotor++) {
+			end[rotor] += smallWork[rotor];
+		}
+		prev = end;
+
+		printf("\n\nStart ");
+		for (int& i : start) {
+			printf("%d,", i);
+		}
+		printf("\nEnd ");
+		for (int& i : end) {
+			printf("%d,", i);
+		}
+	}
+
+	// Dealing with odd [N]
+	std::vector<int> start = prev;
+	std::vector<int> end = totalWork;
+
+	printf("\n\nStart ");
+	for (int& i : start) {
+		printf("%d,", i);
+	}
+	printf("\nEnd ");
+	for (int& i : end) {
+		printf("%d,", i);
+	}
+
+
 	// 3. Create N iterators
 
-	for (int i = 0; i < N; i++) {
-		//TODO
-	}
+	
+	//for (int i = 0; i < N; i++) {
+	//	//TODO
+	//}
 	return jobs;
 }

@@ -17,12 +17,6 @@ public:
 	// Allows to generate all possible combinations of words with any size.
 	bool guessWord();
 
-	/// Holds a recently guessed word. 
-	///
-	/// Examples of lowercase words: "a", "aa", "baa", "caa", "zzz"    
-	/// Examples of custom words: "0", "0aA", "4faasdXMMA" ...
-	std::string word;
-
 	/// Increases the length of a word.
 	///
 	/// Rotors act like a set of clocks. When the 1st makes a full circle, it rotates the next one.
@@ -31,13 +25,20 @@ public:
 	/// Resets happen at [z][z], [z][z][z] etc.
 	bool resetRotors();
 
+	/// This is the value that rotors point at
+	///
+	/// Examples of lowercase words: "a", "aa", "baa", "caa", "zzz"    
+	/// Examples of custom words: "0", "0aA", "4faasdXMMA" ...
+	std::string word;
+
+	// Setters for private values
 	void setWordLen(int n);
 	void setStart(std::vector<int> offset);
-	void setFinish(std::vector<int> offset);
+	void setBreak(std::vector<int> offset);
 
+	// Debug related stuff
 	void debug();
-	int count;
-		
+	int count;		
 
 	// Allows to assign multiple threads [N] to iterate portions of the plain-text space  
 	std::vector<Iterator> divideWork(int N);
@@ -45,25 +46,40 @@ public:
 private:
 	/// Indicates the edge rotor. 
 	///
-	/// From the previous example, when the slowest rotor is [z], the reset will happen.
-	/// Unless we don't need a longer word. 
+	/// When the slowest rotor is [z], the reset usually happens at the next rotation.
 	int slowestRotor;
 
-	/// Tells if we can increase the size of a word.
+	/// Keeping track of the current [word] size.
+	///
+	/// Allows to to generate all possible combinations & all possible sizes
 	int currDigits;
 	int maxDigits;
 
-	/// Holds a string position generated from [offsetStart].
+	/// Describes the initial positions of rotors.
+	/// 
+	/// This is generated from [startOffset] and stays the same
+	/// for different [word] sizes.
 	std::string initWord;
 
 	/// Describes possible values that a digit at a certain rotor can have.
+	///
+	/// For example 
+	/// - "ddd" is a 1-3 digits numbers
+	/// - "lll" is a 1-3 len words (lower case) 
 	std::string mask;
 
-	/// Allows to bypass rotationsLeft that we don't need.
+	/// Descrives starting & end-1 positions of the rotors
+	///
+	/// This allows to bypass combinations that we don't need.
 	std::vector<int> offsetStart;
 	std::vector<int> offsetBreak;
 
-	/// Allows to limit rotations of rotors.
+	/// Describes the distance to a final position
+	///
+	/// Examples for digits (0-9): 
+	/// - [1][0] = distance of 1 
+	/// - [0][1] = distance of 10
+	//  - [3][4] = distance of 4*10 + 3
 	std::vector<int> rotationsLeft;
 };
 
