@@ -45,7 +45,7 @@ public:
 	void setFinish(std::vector<int> offset);
 
 	// Debug related stuff
-	void printRage();
+	void printRange();
 	void debug();
 	int count;		
 

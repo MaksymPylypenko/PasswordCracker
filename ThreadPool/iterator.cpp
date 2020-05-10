@@ -43,9 +43,6 @@ Iterator::Iterator(std::string mask, std::vector<int> offsetStart, std::vector<i
 	this->mask = mask;
 	this->offsetStart = offsetStart;
 	this->offsetFinish = offsetFinish;
-
-	// std:vector<int<
-	// this->offsetFinish = rotorsAddition(offsetFinish, ;
 	count = 1;
 	currDigits = 1;
 	maxDigits = mask.size();
@@ -149,37 +146,12 @@ bool Iterator::guessWord() {
 }
 
 
-//int calculateWork(std::vector<int> start, std::vector<int> end) {	
-//	// ONLY FOR DEBUG!!!
-//	// This only works with numbers!
-//	// This only works when all starting digits are smaller than ending digits, which is not always the case.
-//	const int digits = 10;
-//
-//	int out = 0;
-//	int rotorValue;
-//	int rotorIndex;
-//	printf("\n");
-//	for (rotorIndex = end.size() -1; rotorIndex >= 0; rotorIndex--) {
-//		rotorValue = end[rotorIndex] - start[rotorIndex];
-//		printf("value = %d\n", rotorValue);
-//
-//		int work = rotorValue;
-//		for (int j = 0; j < rotorIndex; j++) {
-//			work *= digits;
-//		}
-//		out += work;
-//		printf("work = %d\n", work);
-//	}
-//	return out;
-//}
-
-
 bool rotorAddition(std::vector<int>& a, std::vector<int>& b, std::vector<int>& max) {
+	// @TODO, add underflow
 
 	if (a.size() != b.size() || b.size() != max.size()) {
 		return false;
 	}
-
 	for (int rotor = 0; rotor < a.size(); rotor++) {
 		a[rotor] += b[rotor];
 
@@ -191,12 +163,10 @@ bool rotorAddition(std::vector<int>& a, std::vector<int>& b, std::vector<int>& m
 }
 
 std::vector<Iterator> Iterator::divideWork(int N) {
-
 	std::vector<Iterator> jobs;
 
 	// 1. Find total work
 	std::vector<int> maxWork;
-
 	for (char& c : mask) {
 		std::string charset = charsetOf(c);
 		maxWork.push_back(charset.size()-1);
@@ -206,7 +176,6 @@ std::vector<Iterator> Iterator::divideWork(int N) {
 	std::vector<int> smallWork;
 	smallWork = maxWork;
 	float carryover = 0.0; 
-
 	for (int i = smallWork.size()-1; i >=0 ; i--) {
 		
 		int& rotorValue = smallWork[i];
@@ -221,19 +190,16 @@ std::vector<Iterator> Iterator::divideWork(int N) {
 		//printf("carryover = %f\n", carryover);
 		//printf("true value = %f\n", trueValue);
 		//printf("rotor value = [%d/%d]\n\n", rotorValue, maxValue);
-	}
-	
+	}	
 
 	// 3. Make ranges using the smallest unit of work.
 
 	std::vector<int> prev(mask.size(), 0);
 	int range = 0;
-
-	for (range = 0; range < N; range++) {
-		
+	for (range = 0; range < N; range++) {		
 		std::vector<int> start = prev;
-
 		int rotor = 0;
+
 		if (range > 0) {
 			// start position is not iclusive
 			start[rotor] += 1;
@@ -244,8 +210,7 @@ std::vector<Iterator> Iterator::divideWork(int N) {
 				rotor++;
 				assert(rotor < mask.size());
 			}
-		}		
-
+		}
 		std::vector<int> end = start;
 		if (range < N - 1) {			
 			for (rotor = 0; rotor < mask.size(); rotor++) {
@@ -263,15 +228,11 @@ std::vector<Iterator> Iterator::divideWork(int N) {
 			// Note, it is not always possible to equally divide the work.
 			// The last range may be a little bit longer (up to N-1 units).
 			end = maxWork;
-		}
-		
-	
+		}	
 		Iterator job = Iterator(mask, start, end);
-		job.printRage();
+		job.printRange();
 		jobs.push_back(job);
 	}
-
-
 	return jobs;
 }
 
@@ -301,7 +262,7 @@ void Iterator::debug() {
 }
 
 
-void Iterator::printRage() {
+void Iterator::printRange() {
 	printf("");
 	for (int& i : offsetStart) {
 		printf("[%d]", i);
