@@ -5,11 +5,19 @@
 #include <vector>
 #include <optional>
 #include <assert.h> 
+#include <algorithm>
+#include <map> 
 
 
 class Iterator {
 public:
 	Iterator(std::string mask);
+
+	/// Alternative constructor for convenience
+	///
+	/// Sets-up custom offsets & calls [resetRotors]
+	/// Note, [offsetFinish] is not inclusive, but [offsetFinish] is!
+	Iterator(std::string mask, std::vector<int> offsetStart, std::vector<int> offsetFinish);
 
 	/// Allows to generate all possible combinations of a word with a fixed size.
 	bool next(int rotor = 0);
@@ -34,14 +42,16 @@ public:
 	// Setters for private values
 	void setWordLen(int n);
 	void setStart(std::vector<int> offset);
-	void setBreak(std::vector<int> offset);
+	void setFinish(std::vector<int> offset);
 
 	// Debug related stuff
+	void printRage();
 	void debug();
 	int count;		
 
 	// Allows to assign multiple threads [N] to iterate portions of the plain-text space  
 	std::vector<Iterator> divideWork(int N);
+
 
 private:
 	/// Indicates the edge rotor. 
@@ -72,7 +82,7 @@ private:
 	///
 	/// This allows to bypass combinations that we don't need.
 	std::vector<int> offsetStart;
-	std::vector<int> offsetBreak;
+	std::vector<int> offsetFinish;
 
 	/// Describes the distance to a final position
 	///

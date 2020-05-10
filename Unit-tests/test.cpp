@@ -137,7 +137,7 @@ TEST(Offset, end) {
 
 	std::string mask = "ll";
 	Iterator iterator = Iterator(mask);
-	iterator.setBreak(std::vector<int>(2, 13));
+	iterator.setFinish(std::vector<int>(2, 13));
 	iterator.setWordLen(2);
 	iterator.resetRotors();
 
@@ -163,7 +163,7 @@ TEST(Offset, end2) {
 
 	std::string mask = "ddd";
 	Iterator iterator = Iterator(mask);
-	iterator.setBreak(std::vector<int>(mask.size(), 3));
+	iterator.setFinish(std::vector<int>(mask.size(), 3));
 	iterator.setWordLen(3);
 	iterator.resetRotors();
 
@@ -194,7 +194,7 @@ TEST(Offset, range) {
 	std::string mask = "dd";
 	Iterator iterator = Iterator(mask);
 	iterator.setStart(std::vector<int>(mask.size(), 5)); 
-	iterator.setBreak(std::vector<int>(mask.size(), 7));
+	iterator.setFinish(std::vector<int>(mask.size(), 7));
 	iterator.setWordLen(2);
 	iterator.resetRotors();
 
@@ -219,11 +219,11 @@ TEST(Offset, range) {
 
 TEST(Bruteforce, all_combinations) {
 	std::string mask = "dd";
+
 	Iterator iterator = Iterator(mask);
 	iterator.setStart(std::vector<int>(mask.size(), 5));
-	iterator.setBreak(std::vector<int>(mask.size(), 7));
+	iterator.setFinish(std::vector<int>(mask.size(), 7));
 	iterator.resetRotors();
-
 
 	char first_c1 = iterator.word[0];
 	EXPECT_EQ(first_c1, '5');
@@ -239,6 +239,7 @@ TEST(Bruteforce, all_combinations) {
 
 	// len = 1 --> [5,7] = 3
 	// len = 2 --> [55,77] = 2*10 + 3
+	// + 1 to include 0 
 
 	EXPECT_EQ(count, 2*10 + 3 + 3 + 1);
 
@@ -246,4 +247,26 @@ TEST(Bruteforce, all_combinations) {
 	char last_c2 = iterator.word[1];
 	EXPECT_EQ(last_c1, '7');
 	EXPECT_EQ(last_c2, '7');
+}
+
+
+TEST(MultiThreading, division_of_work) {
+	std::string mask = "ddd";
+
+	Iterator iterator = Iterator(mask);
+	std::vector<Iterator> jobs = iterator.divideWork(2);
+
+	int numJobs = jobs.size();
+	EXPECT_EQ(numJobs, 2);
+
+	jobs[0].setWordLen(3);
+	jobs[0].resetRotors();
+	jobs[1].setWordLen(3);
+	jobs[1].resetRotors();
+	
+	int countJob0 = countWords(jobs[0]);
+	int countJob1 = countWords(jobs[1]);
+
+	EXPECT_EQ(countJob0, 500);
+	EXPECT_EQ(countJob1, 500);
 }
