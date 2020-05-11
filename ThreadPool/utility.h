@@ -3,11 +3,7 @@
 
 #include <string>
 #include <vector>
-#include <optional>
 #include <assert.h> 
-#include <algorithm>
-#include <map> 
-
 
 class Iterator {
 public:
@@ -25,12 +21,12 @@ public:
 	// Allows to generate all possible combinations of words with any size.
 	bool guessWord();
 
-	/// Increases the length of a word.
+	/// Resets values to [initWord].
 	///
 	/// Rotors act like a set of clocks. When the 1st makes a full circle, it rotates the next one.
 	/// For example, we start from single digit words [a], [b], [c] ... 
 	/// When the last digit is reached e.g [z], rotors are reset to allow longer words: [a][a], [b][a] ... 
-	/// Resets happen at [z][z], [z][z][z] etc.
+	/// Resets normally happen at [z][z], [z][z][z] etc.
 	bool resetRotors();
 
 	/// This is the value that rotors point at
@@ -61,7 +57,7 @@ private:
 
 	/// Keeping track of the current [word] size.
 	///
-	/// Allows to to generate all possible combinations & all possible sizes
+	/// Allows to to generate all possible combinations of all possible sizes
 	int currDigits;
 	int maxDigits;
 

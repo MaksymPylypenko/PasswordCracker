@@ -97,13 +97,11 @@ bool Iterator::resetRotors() {
 
 
 bool Iterator::next(int rotor) {
-
-	if (rotor >= word.size()) {
-		assert(false && "Rotation outside bounds");
-	}
+	
+	assert(rotor < word.size() && "Rotation outside bounds");
 
 	if (rotationsLeft[slowestRotor] <= 0) {
-		printf("\nRotor [%d] has reached its final position [%c]\n\n", slowestRotor, word[slowestRotor]);
+		//printf("\nRotor [%d] has reached its final position [%c]\n\n", slowestRotor, word[slowestRotor]);
 		slowestRotor--; 
 		if (slowestRotor == -1) {
 			return false;
@@ -146,22 +144,6 @@ bool Iterator::guessWord() {
 }
 
 
-bool rotorAddition(std::vector<int>& a, std::vector<int>& b, std::vector<int>& max) {
-	// @TODO, add underflow
-
-	if (a.size() != b.size() || b.size() != max.size()) {
-		return false;
-	}
-	for (int rotor = 0; rotor < a.size(); rotor++) {
-		a[rotor] += b[rotor];
-
-		if (a[rotor] > max[rotor] + 1) {
-			a[rotor] -= max[rotor] + 1;
-			a[rotor + (uint64_t)1]++;
-		}
-	}
-}
-
 std::vector<Iterator> Iterator::divideWork(int N) {
 	std::vector<Iterator> jobs;
 
@@ -193,7 +175,6 @@ std::vector<Iterator> Iterator::divideWork(int N) {
 	}	
 
 	// 3. Make ranges using the smallest unit of work.
-
 	std::vector<int> prev(mask.size(), 0);
 	int range = 0;
 	for (range = 0; range < N; range++) {		
@@ -235,8 +216,6 @@ std::vector<Iterator> Iterator::divideWork(int N) {
 	}
 	return jobs;
 }
-
-
 
 
 // Utility
