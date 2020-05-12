@@ -2,7 +2,6 @@
 .vs
 .vs/*
 x64/*
-ThreadPool/x64/*
-Unit-tests/x64/*
-ThreadPool/x64/*
-CRYPTOPP_8_2_0/x64/*
+brute-force/x64/*
+unit-tests/x64/*
+packages/cryptopp/x64/*

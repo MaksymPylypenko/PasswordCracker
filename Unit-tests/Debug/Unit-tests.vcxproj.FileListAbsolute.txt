@@ -1,1 +1,0 @@
-E:\GitHub\ThreadPool\ThreadPool\Unit-tests\Debug\Unit-tests.vcxproj.CopyComplete
