@@ -1,5 +1,5 @@
-#ifndef util_h
-#define util_h
+#ifndef iterator_h
+#define iterator_h
 
 #include <string>
 #include <vector>
@@ -89,4 +89,4 @@ private:
 	std::vector<int> rotationsLeft;
 };
 
-#endif util_h
+#endif iterator_h

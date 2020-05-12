@@ -21,10 +21,21 @@
     <ClCompile Include="iterator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="comparator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="utility.h">
+    <ClInclude Include="comparator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="iterator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="passwords.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
   </ItemGroup>
 </Project>
