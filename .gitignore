@@ -3,5 +3,4 @@
 .vs/*
 x64/*
 brute-force/x64/*
-unit-tests/x64/*
 packages/cryptopp/x64/*
