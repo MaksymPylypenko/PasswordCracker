@@ -51,17 +51,17 @@ int main() {
 	std::cout << "Program started\n";
 
 	std::string hex = "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824";
-	//std::cout << "Enter a SHA-256 hash (hex format): ";
-	//std::getline(std::cin, hex);
+	std::cout << "Enter a SHA-256 hash (hex format): ";
+	std::getline(std::cin, hex);
 	std::string digest = getBytes(hex);
 
 	std::string mask = "llllll";
-	//std::cout << "Enter the mask (u/l/d): ";
-	//std::getline(std::cin, mask);
+	std::cout << "Enter the mask (u/l/d): ";
+	std::getline(std::cin, mask);
 
 	std::string threadsNum = "4";
-	//std::cout << "Enter the number of threads: ";
-	//std::getline(std::cin, threadsNum);
+	std::cout << "Enter the number of threads: ";
+	std::getline(std::cin, threadsNum);
 
 	Iterator iterator = Iterator(mask);
 
