@@ -3,7 +3,7 @@ Multi-threaded bruteforce
 
 ![rotors](https://github.com/MaksymPylypenko/PasswordCracker/blob/master/brute-force/rotors.png)
 
-## How it works?
+## How does it work?
 
 All possible word/number combinations are represented using [Rotors]. You can imagine a word as:
 
@@ -13,7 +13,7 @@ By adding 1, we can get
 
 `[1][0][0]`, `[2][0][0]` ... `[9][0][0]`, `[0][1][0]`
 
-If we repeat this proccess we would iterate all possible digits of length 3
+If we repeat this process we would iterate all possible digits of length 3
 
 `[0][0][0]` --> `[9][9][9]`
 
@@ -23,7 +23,7 @@ Those charsets could also be mixed using a `mask`.
 
 ## Usage example
 
-SHA-256 is the only available hash right now, but it shoudn't be difficult to use `cryptopp` library for other hashes as well.
+SHA-256 is the only available hash right now, but it shouldn't be difficult to use the `cryptopp` library for other hashes as well.
 For testing purposes, you may generate a SHA-256 hash using this [website](https://xorbin.com/tools/sha256-hash-calculator).
 The number of threads should be close to the number of CPU cores (for better performance). Here are some test runs on Intel Core i7-2630QM 
 ``` 
@@ -37,7 +37,7 @@ Thread (1) joined
 Thread (0) joined
 ```
 
-Just for comparision, this is the same hash using only 1 thread.
+Just for comparison, this is the same hash using only 1 thread.
 ```
 Enter a SHA-256 hash (hex format): 2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824
 Enter the mask (u/l/d): llllll
@@ -65,7 +65,7 @@ Thread (7) joined
 
 ```
 
-Suprisingly, using 20 threads is kinda better. However, this makes the OS unusable during the bruteforce.
+Surprisingly, using 20 threads is kinda better. However, this makes the OS unusable during the bruteforce.
 ```
 Enter a SHA-256 hash (hex format): 2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824
 Enter the mask (u/l/d): llllll
