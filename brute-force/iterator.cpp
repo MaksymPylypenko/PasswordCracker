@@ -22,184 +22,120 @@ std::string charsetOf(char type) {
 }
 
 
-Iterator::Iterator(std::string mask) {
-	this->mask = mask;
-	offsetStart = std::vector<int>(mask.size(), 0);	
-	offsetFinish.clear();
-	for (char& c : mask) {
-		std::string charset = charsetOf(c);
-		offsetFinish.push_back(charset.size()-1);
-	}
+bool Rotors::next(int rotor) {
 
-	count = 1;
-	currDigits = 1;
-	slowestRotor = 0; // or currDigits - 1
-	rotationsLeft = std::vector<int>(currDigits, 1);
-	maxDigits = mask.size();
-}
+	assert(rotor < digits && "Rotation outside bounds");
 
-
-Iterator::Iterator(std::string mask, std::vector<int> offsetStart, std::vector<int> offsetFinish) {
-	this->mask = mask;
-	this->offsetStart = offsetStart;
-	this->offsetFinish = offsetFinish;
-	count = 1;
-	currDigits = 1;
-	maxDigits = mask.size();
-	resetRotors(); 
-}
-
-
-void Iterator::setStart(std::vector<int> offset) {
-	offsetStart = offset;
-}
-
-
-void Iterator::setFinish(std::vector<int> offset) {	
-	offsetFinish = offset;
-}
-
-
-void Iterator::setWordLen(int n) {
-	currDigits = n;
-}
-
-
-bool Iterator::resetRotors() {
-
-	if (currDigits > maxDigits) {
-		return false;
-	}
-
-	std::string charset;
-	initWord = std::string(mask.size(),' ');
-
-	rotationsLeft = std::vector<int>(currDigits);
-	int i=0;
-	for (i = 0; i < currDigits; i++) {
-		charset = charsetOf(mask[i]);
-		initWord.at(i) = charset.at(offsetStart[i]);
-			
-		// Limit the number of rotations				
-		rotationsLeft[i] = offsetFinish[i];
-	}
-
-	// The right most rotor might not need a full round!
-	int j = i - 1;
-	rotationsLeft[j] = offsetFinish[j] - offsetStart[j];
-
-	word = initWord.substr(0, currDigits);
-	slowestRotor = currDigits - 1;
-	
-
-	return true;
-}
-
-
-bool Iterator::next(int rotor) {
-	
-	assert(rotor < word.size() && "Rotation outside bounds");
-
-	if (rotationsLeft[slowestRotor] <= 0) {
-		//printf("\nRotor [%d] has reached its final position [%c]\n\n", slowestRotor, word[slowestRotor]);
-		slowestRotor--; 
-		if (slowestRotor == -1) {
+	if (rotationsLeft[head] <= 0) {
+		//printf("\nRotor [%d] has reached its final position [%c]\n\n", head, word[head]);
+		head--;
+		if (head == -1) {
 			return false;
 		}
 	}
-	
-	count++;
 
 	// Move to the slower [rotor] when the round is finished.
 	// For example:
-	// [a][a] --> [b][a] --> ... --> [z][a] 
-	// [a][b] --> [b][b] --> ... --> [z][b]
-	// [a][c] --> [b][c] --> ... --> [z][c]
+	// [0][0] --> [1][0] --> ... --> [9][0] 
+	// [0][1] --> [1][1] --> ... --> [9][1]
+	// [0][2] --> [1][2] --> ... --> [9][2]
 
-	std::string charset = charsetOf(mask[rotor]);
-	int first = 0;
-	int last = charset.size() - 1;
-	if (word.at(rotor) == charset.at(last)) {	
-
-		word.at(rotor) = charset.at(first);
-		return next(rotor+1);
+	if (curValues[rotor] == maxValues[rotor]) {
+		curValues[rotor] = 0;
+		return next(rotor + 1);
 	}
-
-	if (rotor == slowestRotor) {
+	if (rotor == head) {
 		rotationsLeft[rotor]--;
 	}
+	curValues.at(rotor)++;
+	return true;
+}
+
+
+Rotors::Rotors(std::vector<int> maxValues) {
+	this->maxValues = maxValues;
+	this->digits = maxValues.size();
+	this->head = digits - 1;
+}
+
+void Rotors::init() {	
+	curValues = std::vector<int>(digits, 0);
+	rotationsLeft = maxValues;
+}
+
+bool Rotors::initRange(std::vector<int> offsetStart, std::vector<int> offsetBreak) {	
+	curValues = std::vector<int>(digits);
+	rotationsLeft = std::vector<int>(digits);
 	
-	word.at(rotor)++;
+	// check for impossible range
+	if (offsetBreak[head] < offsetStart[head]) {
+		// not possible			
+		return false;
+	}
+
+
+	int i = 0;
+	for (i = 0; i < digits; i++) {
+		curValues[i] = offsetStart[i];
+		// Limit the number of rotations				
+		rotationsLeft[i] = offsetBreak[i];
+	}
+	// The right most rotor might not need a full round!
+	int j = i - 1;
+	rotationsLeft[j] = offsetBreak[j] - offsetStart[j];
 	return true;
 }
 
 
-bool Iterator::guessWord() {
-	if (!next()) {	
-		count++;
-		currDigits++;
-		return resetRotors();
-	}
-	return true;
-}
+std::vector<Rotors> Rotors::slice(int N) {
 
+	std::vector<Rotors> slices;
 
-std::vector<Iterator> Iterator::divideWork(int N) {
-	std::vector<Iterator> jobs;
-
-	// 1. Find total work
-	std::vector<int> maxWork;
-	for (char& c : mask) {
-		std::string charset = charsetOf(c);
-		maxWork.push_back(charset.size()-1);
-	}
-
-	// 2. Find the smallest unit of work that a single thread can do.
+	// 1. Find the smallest unit of work that a single thread can do.
 	std::vector<int> smallWork;
-	smallWork = maxWork;
-	float carryover = 0.0; 
-	for (int i = smallWork.size()-1; i >=0 ; i--) {
-		
+	smallWork = maxValues;
+	float carryover = 0.0;
+	for (int i = digits - 1; i >= 0; i--) {
+
 		int& rotorValue = smallWork[i];
-		int& maxValue = maxWork[i];
 
 		// Adding + 1 to show the number of elements at a current rotor, instead of the max offset
-		float t = carryover * (maxValue+1); 
+		float t = carryover * (maxValues[i] + 1);
 		float trueValue = ((float)rotorValue) / N + t;
-		rotorValue = (int)trueValue;				
-		carryover = trueValue-rotorValue;		
+		rotorValue = (int)trueValue;
+		carryover = trueValue - rotorValue;
 
 		//printf("carryover = %f\n", carryover);
 		//printf("true value = %f\n", trueValue);
-		//printf("rotor value = [%d/%d]\n\n", rotorValue, maxValue);
-	}	
+		//printf("rotor value = [%d/%d]\n\n", rotorValue, maxWork);
+	}
 
-	// 3. Make ranges using the smallest unit of work.
-	std::vector<int> prev(mask.size(), 0);
+	// 2. Make ranges using the smallest unit of work.
+	std::vector<int> prev(digits, 0);
 	int range = 0;
-	for (range = 0; range < N; range++) {		
+	for (range = 0; range < N; range++) {
 		std::vector<int> start = prev;
 		int rotor = 0;
 
 		if (range > 0) {
 			// start position is not iclusive
 			start[rotor] += 1;
-			while (start[rotor] > maxWork[rotor]) {
+			while (start[rotor] > maxValues[rotor]) {
 				//overflow
-				start[rotor] -= maxWork[rotor]+1;
+				start[rotor] -= maxValues[rotor] + 1;
 				start[rotor + (uint64_t)1]++;
 				rotor++;
-				assert(rotor < mask.size());
+				assert(rotor < wordlen.size());
 			}
 		}
 		std::vector<int> end = start;
-		if (range < N - 1) {			
-			for (rotor = 0; rotor < mask.size(); rotor++) {
+		if (range < N - 1) {
+			for (rotor = 0; rotor < digits; rotor++) {
 				end[rotor] += smallWork[rotor];
 
-				if (end[rotor] > maxWork[rotor]) {
+				if (end[rotor] > maxValues[rotor]) {
 					//overflow
-					end[rotor] -= maxWork[rotor]+1;
+					end[rotor] -= maxValues[rotor] + 1;
 					end[rotor + (uint64_t)1]++;
 				}
 			}
@@ -208,46 +144,166 @@ std::vector<Iterator> Iterator::divideWork(int N) {
 		else {
 			// Note, it is not always possible to equally divide the work.
 			// The last range may be a little bit longer (up to N-1 units).
-			end = maxWork;
-		}	
-		Iterator job = Iterator(mask, start, end);
-		job.printRange();
-		jobs.push_back(job);
+			end = maxValues;
+		}
+
+		Rotors r = Rotors(maxValues);
+		r.initRange(start, end);
+		slices.push_back(r);
 	}
-	return jobs;
+	return slices;
 }
 
+
+//////
+
+void Iterator::updateWord() {
+	std::vector<int> values = sets[currSet].curValues;
+	word = std::string(values.size(),' ');
+	for (int i = 0; i < values.size(); i++) {
+		std::string charset = charsetOf(mask[i]);
+		word.at(i) = charset.at(values[i]);	
+	}
+}
+
+
+Iterator::Iterator(std::string mask) {
+	this->mask = mask;
+	this->currSet = 0;
+}
+
+
+void Iterator::init() {
+	int n = mask.size();
+	std::vector<int> maxValues(n);
+
+	// This only works if every digit at [offsetStart] is smaller than every digit at [offsetBreak]
+	for (int i = 0; i < n; i++) {
+		std::string charset = charsetOf(mask[i]);
+		maxValues[i] = charset.size() - 1;
+	}
+
+	for (int i = 1; i <= n; i++) {
+		std::vector<int> subset(maxValues.begin(), maxValues.begin() + i);
+		Rotors r = Rotors(subset);
+		r.init();
+		sets.push_back(r);
+	}
+	updateWord();
+}
+
+
+void Iterator::initCustom(std::vector<Rotors> sets) {
+	this->sets = sets;
+	updateWord();
+}
+
+
+bool Iterator::guessWord() {
+	if (!sets[currSet].next()) {		
+		currSet++;
+		if (currSet < sets.size()) {
+			return guessWord();
+		}
+		else {
+			return false;
+		}		
+	}
+	count++;
+	updateWord();
+	return true;
+}
+
+
+std::vector<Iterator> Iterator::divideWork(int N) {
+
+	std::vector<Iterator> jobs;
+	int s = mask.size();
+	std::vector<int> maxValues(s);
+
+	for (int i = 0; i < s; i++) {
+		std::string charset = charsetOf(mask[i]);
+		maxValues[i] = charset.size() - 1;
+	}
+
+	std::vector<std::vector<Rotors>> stacks(N);
+	// Stacks look like this:
+	// [0]-->[2]
+	// [0][0]-->[2][2]
+	// [0][0]-->[2][2][2]
+	// ...
+
+	for (int wordlen = 1; wordlen <= s; wordlen++) {
+		std::vector<int> maxWork(maxValues.begin(), maxValues.begin() + wordlen);
+		Rotors r = Rotors(maxWork);
+
+		// Slices for [wordlen=1] look like this
+		// [0]-->[2], [3]-->[5], [6]-->[8] ...
+		// 
+		// Similarly for [wordlen=2]:
+		// [0][0]-->[2][2], [3][3]-->[5][5] ...
+		//
+		// This is also for [wordlen=2], but for shorter slices:
+		// [0][0]-->[7][1], [8][1]-->[5][3] ...
+
+		std::vector<Rotors> slices = r.slice(N);
+
+		for (int i = 0; i < N; i++) {
+			stacks[i].push_back(slices[i]);
+		}
+	}
+
+	for (int i = 0; i < stacks.size(); i++) { 
+		Iterator job = Iterator(mask);
+		job.initCustom(stacks[i]);
+		jobs.push_back(job);
+
+		/*printf("\nThread %d\n", i);
+		for (Rotors r : stacks[i]) {
+			std::vector<int> values = r.curValues;
+			printf("");
+			for (int j : values) {
+				printf("[%d]", j);
+			}
+			printf("\n");
+		}*/
+	}
+
+	return jobs;
+}
 
 // Utility
 
 void Iterator::debug() {
+	Rotors curr = sets[currSet];
+
 	printf("Word='");
 	int i = 0;
 	for (i = 0; i < word.size(); i++) {
-		if (i == slowestRotor) {
+		if (i == curr.head) {
 			printf("[");
 		}
 		printf("%c", word.at(i));
-		if (i == slowestRotor) {
+		if (i == curr.head) {
 			printf("]");
 		}
 	}
 	printf("'\t#%d\tRotors=[", count);
-	for (i = 0; i < rotationsLeft.size() - 1; i++) {
-		printf("%d-", rotationsLeft[i]);
+	for (i = 0; i < curr.rotationsLeft.size() - 1; i++) {
+		printf("%d-", curr.rotationsLeft[i]);
 	}
-	printf("%d]", rotationsLeft[i]);
+	printf("%d]", curr.rotationsLeft[i]);
 	printf("\n");
 }
 
 
-void Iterator::printRange() {
+void printRange(std::vector<int> start, std::vector<int> end) {
 	printf("");
-	for (int& i : offsetStart) {
+	for (int i : start) {	
 		printf("[%d]", i);
 	}
-	printf("\t-->\t");
-	for (int& i : offsetFinish) {
+	printf(" --> ");
+	for (int i : end) {
 		printf("[%d]", i);
 	}
 	printf("\n");
